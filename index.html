@@ -4,7 +4,90 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
-  <body></body>
-  <script></script>
+  <body>
+    <div id="horizon"></div>
+    <div id="sun"></div>
+
+    <script src="node_modules/suncalc/suncalc.js"></script>
+    <script>
+      // Function to calculate and set sun's position based on user's location and time
+      function setSunPosition(latitude, longitude) {
+        // Get current date and time
+        const currentDate = new Date();
+        const currentTimeStr = currentDate.toLocaleTimeString();
+
+        // times object
+        const times = SunCalc.getTimes(currentDate, latitude, longitude);
+
+        // Calculate sunrise and sunset times
+        const sunriseTimeStr = times.sunrise.getHours() + ':' + times.sunrise.getMinutes();
+        const sunsetTimeStr = times.sunset.getHours() + ':' + times.sunset.getMinutes();
+
+        // Function to convert time in "hh:mm" format to hours and minutes
+        function parseTime(timeStr) {
+          const [hours, minutes] = timeStr.split(':').map((str) => parseInt(str));
+          return hours + minutes / 60; // Convert minutes to fraction of hours
+        }
+
+        // Parse sunrise and sunset times
+        const sunriseTime = parseTime(sunriseTimeStr);
+        const sunsetTime = parseTime(sunsetTimeStr);
+
+        // Convert current time to fraction of the day
+        const [currentHour, currentMinute, currentSecond] = currentTimeStr.split(':').map((str) => parseInt(str));
+        const currentFraction = currentHour + currentMinute / 60 + currentSecond / 3600;
+
+        // Get sun's position for user's location
+        const sunPosition = SunCalc.getPosition(currentDate, latitude, longitude);
+        const { altitude } = sunPosition;
+        const altitudeDegrees = altitude * (180 / Math.PI);
+        console.log('Current solar altitude:', altitudeDegrees);
+
+        // Calculate the fraction of the day that has passed
+        let dayFraction;
+        if (currentFraction < sunriseTime) {
+          dayFraction = 0; // Before sunrise
+        } else if (currentFraction > sunsetTime) {
+          dayFraction = 1; // After sunset
+        } else {
+          dayFraction = (currentFraction - sunriseTime) / (sunsetTime - sunriseTime);
+        }
+
+        // Calculate the sun's horizontal position
+        const sunPositionX = dayFraction * 100; // 100% corresponds to the full width
+
+        // Set the sun's position
+        const sun = document.getElementById('sun');
+        sun.style.left = `${sunPositionX}%`;
+
+        // Calculate sun's position on the screen based on altitude
+        const screenHeight = window.innerHeight;
+        const halfScreen = screenHeight / 2;
+        const sunPositionY = ((90 - altitudeDegrees) / 90) * halfScreen; // Convert altitude to pixels
+        sun.style.top = `${sunPositionY}px`; // Set vertical position based on altitude
+
+        console.log('Sun position (x, y):', sunPositionX, sunPositionY);
+      }
+      // Function to get user's location and call setSunPosition
+      function getUserLocation() {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(function (position) {
+            const rawLatitude = position.coords.latitude;
+            const rawLongitude = position.coords.longitude;
+
+            const latitude = Math.round(rawLatitude * 10) / 10;
+            const longitude = Math.round(rawLongitude * 10) / 10;
+            setSunPosition(latitude, longitude);
+          });
+        } else {
+          console.log('Geolocation is not supported by this browser.');
+        }
+      }
+
+      // Call the function to get user's location and set sun's position
+      getUserLocation();
+    </script>
+  </body>
 </html>

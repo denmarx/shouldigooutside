@@ -1,0 +1,25 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+  background-color: #87ceeb; /* Sky blue background */
+}
+
+#horizon {
+  position: absolute;
+  bottom: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: #000; /* Black horizon line */
+}
+
+#sun {
+  position: absolute;
+  /* left: -100px; Start the sun off-screen to the left */
+  /* top: 50%; */
+  width: 100px;
+  height: 100px;
+  background-color: #ffd700; /* Yellow sun */
+  border-radius: 50%;
+  animation: sunAnimation 20s linear infinite; /* Adjust animation duration */
+}
